@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import {
+  CLASS_LABELS,
+  RACE_LABELS,
+  type ClassId,
+  type RaceId,
+} from "@/lib/rules/creation-data";
 import {
   deleteCharacter,
   listCharacters,
@@ -11,11 +17,10 @@ import {
 import type { Character } from "@/lib/types/character";
 
 export function HomePage() {
-  const [characters, setCharacters] = useState<Character[]>([]);
-
-  useEffect(() => {
-    setCharacters(listCharacters());
-  }, []);
+  const [characters, setCharacters] = useState<Character[]>(() => {
+    if (typeof window === "undefined") return [];
+    return listCharacters();
+  });
 
   function handleNewCharacter() {
     startNewDraft();
@@ -70,7 +75,14 @@ export function HomePage() {
                     {character.name || "Sem nome"}
                   </p>
                   <p className="text-sm capitalize text-zinc-500">
-                    {character.raceId ?? "—"} · {character.classId ?? "—"} ·
+                    {character.raceId
+                      ? RACE_LABELS[character.raceId as RaceId]
+                      : "—"}{" "}
+                    ·{" "}
+                    {character.classId
+                      ? CLASS_LABELS[character.classId as ClassId]
+                      : "—"}{" "}
+                    ·
                     nv {character.level}
                   </p>
                 </div>

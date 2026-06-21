@@ -7,13 +7,39 @@ import { useEffect, useState } from "react";
 import { StepProgress } from "@/components/creation-flow/StepProgress";
 import { CREATION_STEPS } from "@/lib/constants/creation-steps";
 import {
+  ABILITY_LABELS,
+  BACKGROUND_LABELS,
+  BACKGROUND_OPTIONS,
+  CLASS_LABELS,
+  CLASS_OPTIONS,
+  CLASS_RULES,
+  RACE_OPTIONS,
+  RACE_LABELS,
+  RACE_RULES,
+  SKILL_LABELS,
+  applyRacialAbilityBonuses,
+  getFinalSkillProficiencies,
+  type BackgroundId,
+  type ClassId,
+  type RaceId,
+} from "@/lib/rules/creation-data";
+import {
   clearDraft,
-  loadDraft,
   saveDraft,
   saveCharacter,
 } from "@/lib/storage/characters";
-import type { Character, CharacterDraft } from "@/lib/types/character";
+import type {
+  AbilityKey,
+  Character,
+  CharacterDraft,
+} from "@/lib/types/character";
 import { calculateProficiencyBonus } from "@/lib/rules/calculate";
+import {
+  getAbilityModifier,
+  getRemainingPoints,
+  canIncreaseAbility,
+  canDecreaseAbility,
+} from "@/lib/rules/abilities";
 
 type CreationShellProps = {
   initialDraft: CharacterDraft;
@@ -31,22 +57,83 @@ export function CreationShell({ initialDraft }: CreationShellProps) {
   const isFirstStep = draft.step === 0;
   const isLastStep = draft.step === CREATION_STEPS.length - 1;
 
+  const selectedClassRules =
+    draft.classId && draft.classId in CLASS_RULES
+      ? CLASS_RULES[draft.classId as ClassId]
+      : null;
+
+  const validClassSkills = selectedClassRules
+    ? draft.skillProficiencies.filter((skill) =>
+        selectedClassRules.skillPool.includes(skill),
+      )
+    : [];
+  
+  const canProceed = (() => {
+    switch (step.id) {
+      case "race":
+        return draft.raceId !== null;
+  
+      case "class":
+        return draft.classId !== null;
+  
+      case "abilities":
+        return getRemainingPoints(draft.abilities) === 0;
+
+      case "skills":
+        return (
+          selectedClassRules !== null &&
+          validClassSkills.length === selectedClassRules.skillChoices
+        );
+
+      case "background":
+        return draft.backgroundId !== null;
+
+      case "review":
+        return draft.name.trim().length > 0;
+  
+      default:
+        return true;
+    }
+  })();
+
   function goBack() {
     if (isFirstStep) return;
     setDraft((current) => ({ ...current, step: current.step - 1 }));
   }
 
   function goNext() {
+    if (!canProceed) {
+      return;
+    }
+
     if (isLastStep) {
+      const classRules =
+        draft.classId && draft.classId in CLASS_RULES
+          ? CLASS_RULES[draft.classId as ClassId]
+          : null;
+      const finalAbilities = applyRacialAbilityBonuses(draft.abilities, draft.raceId);
+      const conMod = getAbilityModifier(finalAbilities.con);
+      const dexMod = getAbilityModifier(finalAbilities.dex);
+      const finalSkills = getFinalSkillProficiencies(
+        validClassSkills,
+        draft.backgroundId,
+      );
+
       const character: Character = {
         ...draft,
+        name: draft.name.trim(),
+        abilities: finalAbilities,
+        skillProficiencies: finalSkills,
         createdAt: new Date().toISOString(),
         level: 1,
         proficiencyBonus: calculateProficiencyBonus(1),
-        maxHp: 10,
-        currentHp: 10,
-        ac: 10,
-        speed: 30,
+        maxHp: Math.max(1, (classRules?.hitDie ?? 8) + conMod),
+        currentHp: Math.max(1, (classRules?.hitDie ?? 8) + conMod),
+        ac: 10 + dexMod,
+        speed:
+          draft.raceId && draft.raceId in RACE_RULES
+            ? RACE_RULES[draft.raceId as RaceId].speed
+            : 30,
       };
 
       saveCharacter(character);
@@ -65,7 +152,7 @@ export function CreationShell({ initialDraft }: CreationShellProps) {
           ← Início
         </Link>
         <span className="truncate text-sm text-zinc-600">
-          {draft.raceId ?? "Raça"} · {draft.classId ?? "Classe"}
+          {draft.raceId ? RACE_LABELS[draft.raceId as RaceId] : "Raça"} · {draft.classId ? CLASS_LABELS[draft.classId as ClassId] : "Classe"}
         </span>
       </div>
 
@@ -92,6 +179,7 @@ export function CreationShell({ initialDraft }: CreationShellProps) {
         <button
           type="button"
           onClick={goNext}
+          disabled={!canProceed}
           className="flex-1 rounded-xl bg-red-800 px-4 py-3 text-sm font-medium text-white hover:bg-red-900"
         >
           {isLastStep ? "Concluir" : "Próximo"}
@@ -120,14 +208,14 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
   if (stepId === "race") {
     return (
       <>
-        {["human", "elf", "dwarf", "halfling"].map((raceId) => (
+        {RACE_OPTIONS.map((raceId) => (
           <button
             key={raceId}
             type="button"
             onClick={() => setDraft((current) => ({ ...current, raceId }))}
             className={optionButtonClass(draft.raceId === raceId)}
           >
-            {raceId}
+            {RACE_LABELS[raceId]}
           </button>
         ))}
       </>
@@ -137,16 +225,248 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
   if (stepId === "class") {
     return (
       <>
-        {["barbarian", "fighter", "rogue", "wizard"].map((classId) => (
+        {CLASS_OPTIONS.map((classId) => (
           <button
             key={classId}
             type="button"
-            onClick={() => setDraft((current) => ({ ...current, classId }))}
+            onClick={() =>
+              setDraft((current) => {
+                const rules = CLASS_RULES[classId];
+                const filteredSkills = current.skillProficiencies.filter((skill) =>
+                  rules.skillPool.includes(skill),
+                );
+
+                return {
+                  ...current,
+                  classId,
+                  skillProficiencies: filteredSkills.slice(0, rules.skillChoices),
+                };
+              })
+            }
             className={optionButtonClass(draft.classId === classId)}
           >
-            {classId}
+            {CLASS_LABELS[classId]}
           </button>
         ))}
+      </>
+    );
+  }
+
+  if (stepId === "abilities") {
+    const abilities = draft.abilities;
+
+    return (
+      <>
+        <div className="mb-4 rounded-xl bg-zinc-100 p-4">
+          <div className="text-sm text-zinc-600">Pontos restantes</div>
+          <div className="text-2xl font-bold">
+            {getRemainingPoints(abilities)}
+          </div>
+        </div>
+
+        {(Object.keys(ABILITY_LABELS) as AbilityKey[]).map((key) => (
+          <div
+            key={key}
+            className="flex items-center justify-between rounded-xl border border-zinc-300 bg-white p-4"
+          >
+            <div>
+              <div className="font-medium">{ABILITY_LABELS[key]}</div>
+              <div className="text-sm text-zinc-500">
+                Modificador {getAbilityModifier(abilities[key]) >= 0 ? "+" : ""}
+                {getAbilityModifier(abilities[key])}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                disabled={!canDecreaseAbility(abilities, key)}
+                onClick={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    abilities: {
+                      ...current.abilities,
+                      [key]: current.abilities[key] - 1,
+                    },
+                  }))
+                }
+                className="h-9 w-9 rounded-lg border"
+              >
+                -
+              </button>
+
+              <span className="w-8 text-center font-semibold">
+                {abilities[key]}
+              </span>
+
+              <button
+                type="button"
+                disabled={!canIncreaseAbility(abilities, key)}
+                onClick={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    abilities: {
+                      ...current.abilities,
+                      [key]: current.abilities[key] + 1,
+                    },
+                  }))
+                }
+                className="h-9 w-9 rounded-lg border"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  if (stepId === "skills") {
+    if (!draft.classId || !(draft.classId in CLASS_RULES)) {
+      return (
+        <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-8 text-center text-sm text-zinc-600">
+          Escolha uma classe antes de selecionar perícias.
+        </div>
+      );
+    }
+
+    const classRules = CLASS_RULES[draft.classId as keyof typeof CLASS_RULES];
+    const selectedSkills = draft.skillProficiencies.filter((skill) =>
+      classRules.skillPool.includes(skill),
+    );
+    const canAddMore = selectedSkills.length < classRules.skillChoices;
+
+    return (
+      <>
+        <div className="mb-4 rounded-xl bg-zinc-100 p-4">
+          <div className="text-sm text-zinc-600">Pericias selecionadas</div>
+          <div className="text-2xl font-bold">
+            {selectedSkills.length}/{classRules.skillChoices}
+          </div>
+        </div>
+
+        {classRules.skillPool.map((skill) => {
+          const selected = selectedSkills.includes(skill);
+
+          return (
+            <button
+              key={skill}
+              type="button"
+              onClick={() =>
+                setDraft((current) => {
+                  const alreadySelected = current.skillProficiencies.includes(skill);
+
+                  if (alreadySelected) {
+                    return {
+                      ...current,
+                      skillProficiencies: current.skillProficiencies.filter(
+                        (item) => item !== skill,
+                      ),
+                    };
+                  }
+
+                  const currentSelectedCount = current.skillProficiencies.filter((item) =>
+                    classRules.skillPool.includes(item),
+                  ).length;
+
+                  if (currentSelectedCount >= classRules.skillChoices) {
+                    return current;
+                  }
+
+                  return {
+                    ...current,
+                    skillProficiencies: [...current.skillProficiencies, skill],
+                  };
+                })
+              }
+              disabled={!selected && !canAddMore}
+              className={optionButtonClass(selected)}
+            >
+              {SKILL_LABELS[skill]}
+            </button>
+          );
+        })}
+      </>
+    );
+  }
+
+  if (stepId === "background") {
+    return (
+      <>
+        {BACKGROUND_OPTIONS.map((backgroundId) => (
+          <button
+            key={backgroundId}
+            type="button"
+            onClick={() => setDraft((current) => ({ ...current, backgroundId }))}
+            className={optionButtonClass(draft.backgroundId === backgroundId)}
+          >
+            {BACKGROUND_LABELS[backgroundId]}
+          </button>
+        ))}
+      </>
+    );
+  }
+
+  if (stepId === "review") {
+    const reviewClassSkills =
+      draft.classId && draft.classId in CLASS_RULES
+        ? draft.skillProficiencies.filter((skill) =>
+            CLASS_RULES[draft.classId as ClassId].skillPool.includes(skill),
+          )
+        : [];
+    const finalAbilities = applyRacialAbilityBonuses(draft.abilities, draft.raceId);
+    const finalSkills = getFinalSkillProficiencies(
+      reviewClassSkills,
+      draft.backgroundId,
+    );
+
+    return (
+      <>
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-zinc-700">Nome do personagem</span>
+          <input
+            type="text"
+            value={draft.name}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, name: event.target.value }))
+            }
+            placeholder="Ex.: Alaric"
+            className="rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 outline-none ring-red-300 focus:ring-2"
+          />
+        </label>
+
+        <div className="rounded-xl border border-zinc-300 bg-white p-4 text-sm text-zinc-700">
+          <p>
+            <strong>Raca:</strong>{" "}
+            {draft.raceId ? RACE_LABELS[draft.raceId as RaceId] : "-"}
+          </p>
+          <p>
+            <strong>Classe:</strong>{" "}
+            {draft.classId ? CLASS_LABELS[draft.classId as ClassId] : "-"}
+          </p>
+          <p>
+            <strong>Background:</strong>{" "}
+            {draft.backgroundId
+              ? BACKGROUND_LABELS[draft.backgroundId as BackgroundId]
+              : "-"}
+          </p>
+          <p>
+            <strong>Pericias:</strong>{" "}
+            {finalSkills.length > 0
+              ? finalSkills.map((skill) => SKILL_LABELS[skill]).join(", ")
+              : "-"}
+          </p>
+          <p>
+            <strong>Atributos finais:</strong>{" "}
+            {(Object.keys(ABILITY_LABELS) as AbilityKey[])
+              .map(
+                (ability) =>
+                  `${ABILITY_LABELS[ability]} ${finalAbilities[ability]}`,
+              )
+              .join(" · ")}
+          </p>
+        </div>
       </>
     );
   }

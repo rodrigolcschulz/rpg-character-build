@@ -22,16 +22,25 @@ export type SkillKey =
   | "stealth"
   | "survival";
 
+export type AbilityGenerationMethod = "pointBuy";
+
 export type CharacterDraft = {
   id: string;
   step: number;
   updatedAt: string;
+
   name: string;
+
   raceId: string | null;
   classId: string | null;
   backgroundId: string | null;
+
+  abilityGenerationMethod: AbilityGenerationMethod;
+
   abilities: Abilities;
+
   skillProficiencies: SkillKey[];
+
   equipmentIds: string[];
 };
 
@@ -46,12 +55,12 @@ export type Character = CharacterDraft & {
 };
 
 export const DEFAULT_ABILITIES: Abilities = {
-  str: 10,
-  dex: 10,
-  con: 10,
-  int: 10,
-  wis: 10,
-  cha: 10,
+  str: 8,
+  dex: 8,
+  con: 8,
+  int: 8,
+  wis: 8,
+  cha: 8,
 };
 
 export function createEmptyDraft(id: string): CharacterDraft {
@@ -63,6 +72,7 @@ export function createEmptyDraft(id: string): CharacterDraft {
     raceId: null,
     classId: null,
     backgroundId: null,
+    abilityGenerationMethod: "pointBuy",
     abilities: { ...DEFAULT_ABILITIES },
     skillProficiencies: [],
     equipmentIds: [],

@@ -1,8 +1,40 @@
 import type { AbilityKey, CharacterDraft, SkillKey } from "@/lib/types/character";
 
-export const RACE_OPTIONS = ["human", "elf", "dwarf", "halfling"] as const;
-export const CLASS_OPTIONS = ["barbarian", "fighter", "rogue", "wizard"] as const;
-export const BACKGROUND_OPTIONS = ["acolyte", "criminal", "soldier", "sage"] as const;
+export const RACE_OPTIONS = [
+  "human",
+  "elf",
+  "dwarf",
+  "halfling",
+  "dragonborn",
+  "tiefling",
+  "halfElf",
+  "halfOrc",
+  "gnome",
+] as const;
+export const CLASS_OPTIONS = [
+  "barbarian",
+  "fighter",
+  "rogue",
+  "wizard",
+  "sorcerer",
+  "warlock",
+  "cleric",
+  "druid",
+  "bard",
+  "paladin",
+] as const;
+export const BACKGROUND_OPTIONS = [
+  "acolyte",
+  "criminal",
+  "soldier",
+  "sage",
+  "entertainer",
+  "folkHero",
+  "noble",
+  "hermit",
+  "outlander",
+  "urchin",
+] as const;
 
 export type RaceId = (typeof RACE_OPTIONS)[number];
 export type ClassId = (typeof CLASS_OPTIONS)[number];
@@ -71,6 +103,92 @@ export const CLASS_RULES: Record<
       "religion",
     ],
   },
+  sorcerer: {
+    hitDie: 6,
+    skillChoices: 2,
+    skillPool: [
+      "arcana",
+      "deception",
+      "insight",
+      "intimidation",
+      "persuasion",
+      "religion",
+    ],
+  },
+  warlock: {
+    hitDie: 8,
+    skillChoices: 2,
+    skillPool: [
+      "arcana",
+      "deception",
+      "history",
+      "intimidation",
+      "investigation",
+      "nature",
+      "religion",
+    ],
+  },
+  cleric: {
+    hitDie: 8,
+    skillChoices: 2,
+    skillPool: [
+      "history",
+      "insight",
+      "medicine",
+      "persuasion",
+      "religion",
+    ],
+  },
+  druid: {
+    hitDie: 8,
+    skillChoices: 2,
+    skillPool: [
+      "arcana",
+      "animalHandling",
+      "insight",
+      "medicine",
+      "nature",
+      "perception",
+      "religion",
+      "survival",
+    ],
+  },
+  bard: {
+    hitDie: 8,
+    skillChoices: 3,
+    skillPool: [
+      "acrobatics",
+      "animalHandling",
+      "arcana",
+      "athletics",
+      "deception",
+      "history",
+      "insight",
+      "intimidation",
+      "investigation",
+      "medicine",
+      "nature",
+      "perception",
+      "performance",
+      "persuasion",
+      "religion",
+      "sleightOfHand",
+      "stealth",
+      "survival",
+    ],
+  },
+  paladin: {
+    hitDie: 10,
+    skillChoices: 2,
+    skillPool: [
+      "athletics",
+      "insight",
+      "intimidation",
+      "medicine",
+      "persuasion",
+      "religion",
+    ],
+  },
 };
 
 export const RACE_RULES: Record<
@@ -109,6 +227,41 @@ export const RACE_RULES: Record<
       dex: 2,
     },
   },
+  dragonborn: {
+    speed: 30,
+    abilityBonuses: {
+      str: 2,
+      cha: 1,
+    },
+  },
+  tiefling: {
+    speed: 30,
+    abilityBonuses: {
+      int: 1,
+      cha: 2,
+    },
+  },
+  halfElf: {
+    speed: 30,
+    abilityBonuses: {
+      cha: 2,
+      dex: 1,
+      con: 1,
+    },
+  },
+  halfOrc: {
+    speed: 30,
+    abilityBonuses: {
+      str: 2,
+      con: 1,
+    },
+  },
+  gnome: {
+    speed: 25,
+    abilityBonuses: {
+      int: 2,
+    },
+  },
 };
 
 export const BACKGROUND_RULES: Record<
@@ -127,6 +280,24 @@ export const BACKGROUND_RULES: Record<
   sage: {
     grantedSkills: ["arcana", "history"],
   },
+  entertainer: {
+    grantedSkills: ["acrobatics", "performance"],
+  },
+  folkHero: {
+    grantedSkills: ["animalHandling", "survival"],
+  },
+  noble: {
+    grantedSkills: ["history", "persuasion"],
+  },
+  hermit: {
+    grantedSkills: ["medicine", "religion"],
+  },
+  outlander: {
+    grantedSkills: ["athletics", "survival"],
+  },
+  urchin: {
+    grantedSkills: ["sleightOfHand", "stealth"],
+  },
 };
 
 export const RACE_LABELS: Record<RaceId, string> = {
@@ -134,6 +305,11 @@ export const RACE_LABELS: Record<RaceId, string> = {
   elf: "elf",
   dwarf: "dwarf",
   halfling: "halfling",
+  dragonborn: "dragonborn",
+  tiefling: "tiefling",
+  halfElf: "half-elf",
+  halfOrc: "half-orc",
+  gnome: "gnome",
 };
 
 export const CLASS_LABELS: Record<ClassId, string> = {
@@ -141,6 +317,12 @@ export const CLASS_LABELS: Record<ClassId, string> = {
   fighter: "fighter",
   rogue: "rogue",
   wizard: "wizard",
+  sorcerer: "sorcerer",
+  warlock: "warlock",
+  cleric: "cleric",
+  druid: "druid",
+  bard: "bard",
+  paladin: "paladin",
 };
 
 export const BACKGROUND_LABELS: Record<BackgroundId, string> = {
@@ -148,6 +330,12 @@ export const BACKGROUND_LABELS: Record<BackgroundId, string> = {
   criminal: "criminal",
   soldier: "soldier",
   sage: "sage",
+  entertainer: "entertainer",
+  folkHero: "folk hero",
+  noble: "noble",
+  hermit: "hermit",
+  outlander: "outlander",
+  urchin: "urchin",
 };
 
 export const ABILITY_LABELS: Record<AbilityKey, string> = {
@@ -160,24 +348,110 @@ export const ABILITY_LABELS: Record<AbilityKey, string> = {
 };
 
 export const SKILL_LABELS: Record<SkillKey, string> = {
-  acrobatics: "Acrobatics",
-  animalHandling: "Animal Handling",
+  acrobatics: "Acrobatics (Acrobacia)",
+  animalHandling: "Animal Handling (Adestrar Animais)",
   arcana: "Arcana",
-  athletics: "Athletics",
-  deception: "Deception",
-  history: "History",
-  insight: "Insight",
-  intimidation: "Intimidation",
-  investigation: "Investigation",
-  medicine: "Medicine",
-  nature: "Nature",
-  perception: "Perception",
-  performance: "Performance",
-  persuasion: "Persuasion",
-  religion: "Religion",
-  sleightOfHand: "Sleight of Hand",
-  stealth: "Stealth",
-  survival: "Survival",
+  athletics: "Athletics (Atletismo)",
+  deception: "Deception (Enganacao)",
+  history: "History (Historia)",
+  insight: "Insight (Intuicao)",
+  intimidation: "Intimidation (Intimidacao)",
+  investigation: "Investigation (Investigacao)",
+  medicine: "Medicine (Medicina)",
+  nature: "Nature (Natureza)",
+  perception: "Perception (Percepcao)",
+  performance: "Performance (Atuacao)",
+  persuasion: "Persuasion (Persuasao)",
+  religion: "Religion (Religiao)",
+  sleightOfHand: "Sleight of Hand (Prestidigitacao)",
+  stealth: "Stealth (Furtividade)",
+  survival: "Survival (Sobrevivencia)",
+};
+
+export const SKILL_ABILITY_MAP: Record<SkillKey, AbilityKey> = {
+  athletics: "str",
+  acrobatics: "dex",
+  sleightOfHand: "dex",
+  stealth: "dex",
+  arcana: "int",
+  history: "int",
+  investigation: "int",
+  nature: "int",
+  religion: "int",
+  animalHandling: "wis",
+  insight: "wis",
+  medicine: "wis",
+  perception: "wis",
+  survival: "wis",
+  deception: "cha",
+  intimidation: "cha",
+  performance: "cha",
+  persuasion: "cha",
+};
+
+export const SKILL_DESCRIPTIONS: Record<SkillKey, string> = {
+  athletics: "Escalar, nadar, arremessar e usar forca bruta.",
+  acrobatics: "Equilibrio, saltos e controle corporal.",
+  sleightOfHand: "Furtar, esconder objetos e truques manuais.",
+  stealth: "Se esconder e se mover sem ser visto.",
+  arcana: "Conhecimento sobre magia e fenomenos arcanos.",
+  history: "Eventos, civilizacoes e fatos historicos.",
+  investigation: "Deduzir pistas e resolver misterios.",
+  nature: "Mundo natural, plantas, animais e terrenos.",
+  religion: "Deuses, cultos, ritos e mitologia.",
+  animalHandling: "Lidar, acalmar e conduzir animais.",
+  insight: "Perceber intencoes e mentiras.",
+  medicine: "Primeiros socorros e cuidados basicos.",
+  perception: "Notar detalhes, ameaças e coisas ocultas.",
+  survival: "Rastrear, orientar-se e viver na natureza.",
+  deception: "Mentir, blefar e enganar.",
+  intimidation: "Ameacar e impor respeito.",
+  performance: "Apresentacoes artisticas e encenacao.",
+  persuasion: "Convencer e negociar com diplomacia.",
+};
+
+export const EQUIPMENT_LABELS: Record<string, string> = {
+  "weapon-quarterstaff": "Quarterstaff",
+  "weapon-dagger": "Dagger",
+  "weapon-mace": "Mace",
+  "weapon-spear": "Spear",
+  "weapon-scimitar": "Scimitar",
+  "weapon-longsword": "Longsword",
+  "weapon-rapier": "Rapier",
+  "weapon-warhammer": "Warhammer",
+  "weapon-light-crossbow": "Light Crossbow",
+  "armor-leather": "Leather Armor",
+  "armor-chain-mail": "Chain Mail",
+  "armor-scale-mail": "Scale Mail",
+  "armor-shield": "Shield",
+  "focus-holy-symbol": "Holy Symbol",
+  "focus-druidic": "Druidic Focus",
+  "focus-arcane": "Arcane Focus",
+  "pack-priest": "Priest Pack",
+  "pack-scholar": "Scholar Pack",
+  "pack-explorer": "Explorer's Pack",
+  "pack-dungeoneer": "Dungeoneer's Pack",
+  "instrument-lute": "Lute",
+  "tools-thieves-tools": "Thieves' Tools",
+};
+
+export const CLASS_STARTER_EQUIPMENT: Record<ClassId, string[]> = {
+  barbarian: ["weapon-spear", "armor-shield", "pack-explorer"],
+  fighter: ["weapon-longsword", "armor-chain-mail", "armor-shield", "pack-explorer"],
+  rogue: [
+    "weapon-rapier",
+    "weapon-dagger",
+    "armor-leather",
+    "tools-thieves-tools",
+    "pack-dungeoneer",
+  ],
+  wizard: ["weapon-quarterstaff", "weapon-dagger", "focus-arcane", "pack-scholar"],
+  sorcerer: ["weapon-light-crossbow", "weapon-dagger", "focus-arcane", "pack-dungeoneer"],
+  warlock: ["weapon-light-crossbow", "armor-leather", "focus-arcane", "pack-scholar"],
+  cleric: ["weapon-mace", "armor-scale-mail", "armor-shield", "focus-holy-symbol", "pack-priest"],
+  druid: ["weapon-scimitar", "armor-leather", "armor-shield", "focus-druidic", "pack-explorer"],
+  bard: ["weapon-rapier", "armor-leather", "instrument-lute", "pack-explorer", "weapon-dagger"],
+  paladin: ["weapon-longsword", "armor-chain-mail", "armor-shield", "focus-holy-symbol", "pack-explorer"],
 };
 
 const ALL_SKILLS: SkillKey[] = [

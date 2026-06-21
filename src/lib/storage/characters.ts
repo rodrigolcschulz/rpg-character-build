@@ -58,6 +58,10 @@ export function listCharacters(): Character[] {
   return readJson<Character[]>(CHARACTERS_KEY, []);
 }
 
+export function getCharacterById(id: string): Character | null {
+  return listCharacters().find((character) => character.id === id) ?? null;
+}
+
 export function saveCharacter(character: Character): void {
   const characters = listCharacters();
   const index = characters.findIndex((item) => item.id === character.id);

@@ -10,12 +10,16 @@ import {
   ABILITY_LABELS,
   BACKGROUND_LABELS,
   BACKGROUND_OPTIONS,
+  CLASS_STARTER_EQUIPMENT,
   CLASS_LABELS,
   CLASS_OPTIONS,
   CLASS_RULES,
+  EQUIPMENT_LABELS,
   RACE_OPTIONS,
   RACE_LABELS,
   RACE_RULES,
+  SKILL_ABILITY_MAP,
+  SKILL_DESCRIPTIONS,
   SKILL_LABELS,
   applyRacialAbilityBonuses,
   getFinalSkillProficiencies,
@@ -87,6 +91,9 @@ export function CreationShell({ initialDraft }: CreationShellProps) {
 
       case "background":
         return draft.backgroundId !== null;
+
+      case "equipment":
+        return draft.equipmentIds.length > 0;
 
       case "review":
         return draft.name.trim().length > 0;
@@ -240,6 +247,7 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
                   ...current,
                   classId,
                   skillProficiencies: filteredSkills.slice(0, rules.skillChoices),
+                  equipmentIds: [...CLASS_STARTER_EQUIPMENT[classId]],
                 };
               })
             }
@@ -383,7 +391,15 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
               disabled={!selected && !canAddMore}
               className={optionButtonClass(selected)}
             >
-              {SKILL_LABELS[skill]}
+              <div className="flex items-center justify-between gap-3">
+                <span>{SKILL_LABELS[skill]}</span>
+                <span className="rounded-md border border-zinc-300 px-2 py-0.5 text-xs uppercase tracking-wide text-zinc-500">
+                  {ABILITY_LABELS[SKILL_ABILITY_MAP[skill]]}
+                </span>
+              </div>
+              <p className="mt-1 text-sm normal-case text-zinc-600">
+                {SKILL_DESCRIPTIONS[skill]}
+              </p>
             </button>
           );
         })}
@@ -404,6 +420,70 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
             {BACKGROUND_LABELS[backgroundId]}
           </button>
         ))}
+      </>
+    );
+  }
+
+  if (stepId === "equipment") {
+    if (!draft.classId || !(draft.classId in CLASS_STARTER_EQUIPMENT)) {
+      return (
+        <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-8 text-center text-sm text-zinc-600">
+          Escolha uma classe antes de selecionar equipamento.
+        </div>
+      );
+    }
+
+    const classEquipment = CLASS_STARTER_EQUIPMENT[draft.classId as ClassId];
+
+    return (
+      <>
+        <div className="rounded-xl bg-zinc-100 p-4 text-sm text-zinc-700">
+          Kit inicial sugerido para {CLASS_LABELS[draft.classId as ClassId]}.
+        </div>
+
+        {classEquipment.map((equipmentId) => {
+          const selected = draft.equipmentIds.includes(equipmentId);
+
+          return (
+            <button
+              key={equipmentId}
+              type="button"
+              onClick={() =>
+                setDraft((current) => {
+                  const alreadySelected = current.equipmentIds.includes(equipmentId);
+
+                  if (alreadySelected) {
+                    return {
+                      ...current,
+                      equipmentIds: current.equipmentIds.filter((item) => item !== equipmentId),
+                    };
+                  }
+
+                  return {
+                    ...current,
+                    equipmentIds: [...current.equipmentIds, equipmentId],
+                  };
+                })
+              }
+              className={optionButtonClass(selected)}
+            >
+              {EQUIPMENT_LABELS[equipmentId] ?? equipmentId}
+            </button>
+          );
+        })}
+
+        <button
+          type="button"
+          onClick={() =>
+            setDraft((current) => ({
+              ...current,
+              equipmentIds: [...classEquipment],
+            }))
+          }
+          className="rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-100"
+        >
+          Restaurar kit padrão
+        </button>
       </>
     );
   }
@@ -455,6 +535,14 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
             <strong>Pericias:</strong>{" "}
             {finalSkills.length > 0
               ? finalSkills.map((skill) => SKILL_LABELS[skill]).join(", ")
+              : "-"}
+          </p>
+          <p>
+            <strong>Equipamento:</strong>{" "}
+            {draft.equipmentIds.length > 0
+              ? draft.equipmentIds
+                  .map((equipmentId) => EQUIPMENT_LABELS[equipmentId] ?? equipmentId)
+                  .join(", ")
               : "-"}
           </p>
           <p>

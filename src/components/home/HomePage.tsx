@@ -70,8 +70,11 @@ export function HomePage() {
                 key={character.id}
                 className="flex items-center justify-between rounded-xl border border-zinc-300 bg-white px-4 py-4"
               >
-                <div>
-                  <p className="font-medium text-zinc-900">
+                <Link
+                  href={`/character/${character.id}`}
+                  className="min-w-0 flex-1"
+                >
+                  <p className="font-medium text-zinc-900 hover:text-red-700">
                     {character.name || "Sem nome"}
                   </p>
                   <p className="text-sm capitalize text-zinc-500">
@@ -85,11 +88,11 @@ export function HomePage() {
                     ·
                     nv {character.level}
                   </p>
-                </div>
+                </Link>
                 <button
                   type="button"
                   onClick={() => handleDelete(character.id)}
-                  className="text-sm text-red-600 hover:text-red-700"
+                  className="ml-4 text-sm text-red-600 hover:text-red-700"
                 >
                   Excluir
                 </button>

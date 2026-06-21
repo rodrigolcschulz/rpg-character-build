@@ -1,18 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { CreationShell } from "@/components/creation-flow/CreationShell";
 import { loadDraft, startNewDraft } from "@/lib/storage/characters";
 import type { CharacterDraft } from "@/lib/types/character";
 
 export default function CreatePage() {
-  const [draft] = useState<CharacterDraft | null>(() => {
-    if (typeof window === "undefined") return null;
+  const [draft, setDraft] = useState<CharacterDraft | null>(null);
 
-    const existing = loadDraft();
-    return existing ?? startNewDraft();
-  });
+  useEffect(() => {
+    try {
+      const existing = loadDraft();
+      setDraft(existing ?? startNewDraft());
+    } catch {
+      setDraft(startNewDraft());
+    }
+  }, []);
 
   if (!draft) {
     return (

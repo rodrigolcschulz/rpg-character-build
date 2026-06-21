@@ -7,6 +7,19 @@ import {
 const DRAFT_KEY = "rpg_character_draft";
 const CHARACTERS_KEY = "rpg_characters";
 
+function generateUUID(): string {
+  // Fallback para navegadores que não suportam crypto.randomUUID()
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Implementação compatível baseada em Math.random()
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
 
@@ -36,7 +49,7 @@ export function clearDraft(): void {
 }
 
 export function startNewDraft(): CharacterDraft {
-  const draft = createEmptyDraft(crypto.randomUUID());
+  const draft = createEmptyDraft(generateUUID());
   saveDraft(draft);
   return draft;
 }

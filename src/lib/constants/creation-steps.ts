@@ -30,6 +30,11 @@ export const CREATION_STEPS = [
     description: "Selecione o equipamento inicial",
   },
   {
+    id: "magic",
+    title: "Magia",
+    description: "Escolha magias conhecidas e veja seus slots",
+  },
+  {
     id: "review",
     title: "Revisão",
     description: "Confira tudo antes de concluir",

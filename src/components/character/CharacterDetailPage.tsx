@@ -8,10 +8,12 @@ import {
   CLASS_LABELS,
   EQUIPMENT_LABELS,
   RACE_LABELS,
+  SPELL_LABELS,
   SKILL_LABELS,
   type BackgroundId,
   type ClassId,
   type RaceId,
+  type SpellId,
 } from "@/lib/rules/creation-data";
 import { getCharacterById } from "@/lib/storage/characters";
 import type { AbilityKey, Character } from "@/lib/types/character";
@@ -104,6 +106,26 @@ export function CharacterDetailPage({ characterId }: CharacterDetailPageProps) {
             ))}
           </ul>
         )}
+      </Section>
+
+      <Section title="Magia">
+        {character.knownSpellIds.length === 0 ? (
+          <p className="text-sm text-zinc-600">Sem magias registradas.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {character.knownSpellIds.map((spellId) => (
+              <li
+                key={spellId}
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700"
+              >
+                {SPELL_LABELS[spellId as SpellId] ?? spellId}
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="mt-2 text-sm text-zinc-600">
+          Slots: nv1 {character.spellSlotsLevel1} · nv2 {character.spellSlotsLevel2}
+        </div>
       </Section>
 
       <Section title="Combate">

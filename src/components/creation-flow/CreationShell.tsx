@@ -10,6 +10,7 @@ import {
   ABILITY_LABELS,
   BACKGROUND_LABELS,
   BACKGROUND_OPTIONS,
+  CLASS_SPELLCASTING,
   CLASS_STARTER_EQUIPMENT,
   CLASS_LABELS,
   CLASS_OPTIONS,
@@ -18,6 +19,9 @@ import {
   RACE_OPTIONS,
   RACE_LABELS,
   RACE_RULES,
+  SPELL_DESCRIPTIONS,
+  SPELL_LABELS,
+  SPELL_LEVELS,
   SKILL_ABILITY_MAP,
   SKILL_DESCRIPTIONS,
   SKILL_LABELS,
@@ -26,6 +30,7 @@ import {
   type BackgroundId,
   type ClassId,
   type RaceId,
+  type SpellId,
 } from "@/lib/rules/creation-data";
 import {
   clearDraft,
@@ -71,6 +76,17 @@ export function CreationShell({ initialDraft }: CreationShellProps) {
         selectedClassRules.skillPool.includes(skill),
       )
     : [];
+
+  const selectedSpellcasting =
+    draft.classId && draft.classId in CLASS_SPELLCASTING
+      ? CLASS_SPELLCASTING[draft.classId as ClassId] ?? null
+      : null;
+
+  const validKnownSpells = selectedSpellcasting
+    ? draft.knownSpellIds.filter((spellId) =>
+        selectedSpellcasting.spellOptions.includes(spellId as SpellId),
+      )
+    : [];
   
   const canProceed = (() => {
     switch (step.id) {
@@ -94,6 +110,12 @@ export function CreationShell({ initialDraft }: CreationShellProps) {
 
       case "equipment":
         return draft.equipmentIds.length > 0;
+
+      case "magic":
+        if (selectedSpellcasting === null || selectedSpellcasting.maxKnownSpells === 0) {
+          return true;
+        }
+        return validKnownSpells.length > 0;
 
       case "review":
         return draft.name.trim().length > 0;
@@ -239,15 +261,26 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
             onClick={() =>
               setDraft((current) => {
                 const rules = CLASS_RULES[classId];
+                const spellcasting = CLASS_SPELLCASTING[classId] ?? null;
                 const filteredSkills = current.skillProficiencies.filter((skill) =>
                   rules.skillPool.includes(skill),
                 );
+                const filteredSpells = spellcasting
+                  ? current.knownSpellIds.filter((spellId) =>
+                      spellcasting.spellOptions.includes(spellId as SpellId),
+                    )
+                  : [];
 
                 return {
                   ...current,
                   classId,
                   skillProficiencies: filteredSkills.slice(0, rules.skillChoices),
                   equipmentIds: [...CLASS_STARTER_EQUIPMENT[classId]],
+                  knownSpellIds: spellcasting
+                    ? filteredSpells.slice(0, spellcasting.maxKnownSpells)
+                    : [],
+                  spellSlotsLevel1: spellcasting?.slotLevel1 ?? 0,
+                  spellSlotsLevel2: spellcasting?.slotLevel2 ?? 0,
                 };
               })
             }
@@ -488,6 +521,86 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
     );
   }
 
+  if (stepId === "magic") {
+    if (!draft.classId) {
+      return (
+        <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-8 text-center text-sm text-zinc-600">
+          Escolha uma classe antes de selecionar magias.
+        </div>
+      );
+    }
+
+    const spellcasting = CLASS_SPELLCASTING[draft.classId as ClassId] ?? null;
+
+    if (!spellcasting || spellcasting.maxKnownSpells === 0) {
+      return (
+        <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-8 text-center text-sm text-zinc-600">
+          Esta classe nao possui magia no nivel 1 nesta versao simplificada.
+        </div>
+      );
+    }
+
+    const selectedSpells = draft.knownSpellIds.filter((spellId) =>
+      spellcasting.spellOptions.includes(spellId as SpellId),
+    );
+    const canAddMoreSpells = selectedSpells.length < spellcasting.maxKnownSpells;
+
+    return (
+      <>
+        <div className="rounded-xl bg-zinc-100 p-4 text-sm text-zinc-700">
+          <p>Slots de magia: nivel 1 = {draft.spellSlotsLevel1} · nivel 2 = {draft.spellSlotsLevel2}</p>
+          <p className="mt-1">Magias conhecidas: {selectedSpells.length}/{spellcasting.maxKnownSpells}</p>
+        </div>
+
+        {spellcasting.spellOptions.map((spellId) => {
+          const selected = selectedSpells.includes(spellId);
+
+          return (
+            <button
+              key={spellId}
+              type="button"
+              onClick={() =>
+                setDraft((current) => {
+                  const alreadySelected = current.knownSpellIds.includes(spellId);
+
+                  if (alreadySelected) {
+                    return {
+                      ...current,
+                      knownSpellIds: current.knownSpellIds.filter((item) => item !== spellId),
+                    };
+                  }
+
+                  const currentSelectedCount = current.knownSpellIds.filter((item) =>
+                    spellcasting.spellOptions.includes(item as SpellId),
+                  ).length;
+
+                  if (currentSelectedCount >= spellcasting.maxKnownSpells) {
+                    return current;
+                  }
+
+                  return {
+                    ...current,
+                    knownSpellIds: [...current.knownSpellIds, spellId],
+                  };
+                })
+              }
+              disabled={!selected && !canAddMoreSpells}
+              className={optionButtonClass(selected)}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span>{SPELL_LABELS[spellId]}</span>
+                <span className="rounded-md border border-zinc-300 px-2 py-0.5 text-xs uppercase tracking-wide text-zinc-500">
+                  Nv {SPELL_LEVELS[spellId]}
+                </span>
+              </div>
+              <p className="mt-1 text-sm normal-case text-zinc-600">{SPELL_DESCRIPTIONS[spellId]}</p>
+            </button>
+          );
+        })}
+      </>
+    );
+  }
+
   if (stepId === "review") {
     const reviewClassSkills =
       draft.classId && draft.classId in CLASS_RULES
@@ -543,6 +656,16 @@ function PlaceholderStep({ stepId, draft, setDraft }: PlaceholderStepProps) {
               ? draft.equipmentIds
                   .map((equipmentId) => EQUIPMENT_LABELS[equipmentId] ?? equipmentId)
                   .join(", ")
+              : "-"}
+          </p>
+          <p>
+            <strong>Slots:</strong>{" "}
+            nv1 {draft.spellSlotsLevel1} · nv2 {draft.spellSlotsLevel2}
+          </p>
+          <p>
+            <strong>Magias:</strong>{" "}
+            {draft.knownSpellIds.length > 0
+              ? draft.knownSpellIds.map((spellId) => SPELL_LABELS[spellId as SpellId]).join(", ")
               : "-"}
           </p>
           <p>

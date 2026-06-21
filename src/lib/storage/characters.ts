@@ -36,12 +36,34 @@ function writeJson<T>(key: string, value: T): void {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+function normalizeDraft(input: CharacterDraft): CharacterDraft {
+  return {
+    ...input,
+    knownSpellIds: input.knownSpellIds ?? [],
+    spellSlotsLevel1: input.spellSlotsLevel1 ?? 0,
+    spellSlotsLevel2: input.spellSlotsLevel2 ?? 0,
+  };
+}
+
+function normalizeCharacter(input: Character): Character {
+  return {
+    ...input,
+    knownSpellIds: input.knownSpellIds ?? [],
+    spellSlotsLevel1: input.spellSlotsLevel1 ?? 0,
+    spellSlotsLevel2: input.spellSlotsLevel2 ?? 0,
+  };
+}
+
 export function loadDraft(): CharacterDraft | null {
-  return readJson<CharacterDraft | null>(DRAFT_KEY, null);
+  const draft = readJson<CharacterDraft | null>(DRAFT_KEY, null);
+  return draft ? normalizeDraft(draft) : null;
 }
 
 export function saveDraft(draft: CharacterDraft): void {
-  writeJson(DRAFT_KEY, { ...draft, updatedAt: new Date().toISOString() });
+  writeJson(DRAFT_KEY, {
+    ...normalizeDraft(draft),
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 export function clearDraft(): void {
@@ -55,7 +77,9 @@ export function startNewDraft(): CharacterDraft {
 }
 
 export function listCharacters(): Character[] {
-  return readJson<Character[]>(CHARACTERS_KEY, []);
+  return readJson<Character[]>(CHARACTERS_KEY, []).map((character) =>
+    normalizeCharacter(character),
+  );
 }
 
 export function getCharacterById(id: string): Character | null {

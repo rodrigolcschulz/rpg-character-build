@@ -454,6 +454,128 @@ export const CLASS_STARTER_EQUIPMENT: Record<ClassId, string[]> = {
   paladin: ["weapon-longsword", "armor-chain-mail", "armor-shield", "focus-holy-symbol", "pack-explorer"],
 };
 
+export type SpellId =
+  | "magicMissile"
+  | "burningHands"
+  | "shield"
+  | "healingWord"
+  | "cureWounds"
+  | "guidingBolt"
+  | "charmPerson"
+  | "dissonantWhispers"
+  | "thunderwave"
+  | "hex"
+  | "witchBolt"
+  | "faerieFire"
+  | "entangle"
+  | "thunderousSmite";
+
+export const SPELL_LABELS: Record<SpellId, string> = {
+  magicMissile: "Magic Missile",
+  burningHands: "Burning Hands",
+  shield: "Shield",
+  healingWord: "Healing Word",
+  cureWounds: "Cure Wounds",
+  guidingBolt: "Guiding Bolt",
+  charmPerson: "Charm Person",
+  dissonantWhispers: "Dissonant Whispers",
+  thunderwave: "Thunderwave",
+  hex: "Hex",
+  witchBolt: "Witch Bolt",
+  faerieFire: "Faerie Fire",
+  entangle: "Entangle",
+  thunderousSmite: "Thunderous Smite",
+};
+
+export const SPELL_DESCRIPTIONS: Record<SpellId, string> = {
+  magicMissile: "Dardos arcanos que acertam automaticamente.",
+  burningHands: "Cone de fogo em curta distancia.",
+  shield: "Reacao defensiva que aumenta sua CA temporariamente.",
+  healingWord: "Cura rapida a distancia com palavra divina.",
+  cureWounds: "Cura por toque para um aliado.",
+  guidingBolt: "Raio radiante que marca o alvo.",
+  charmPerson: "Encanta um humanoide e melhora interacoes sociais.",
+  dissonantWhispers: "Sussurros mentais que causam dano psiquico.",
+  thunderwave: "Onda trovejante que empurra inimigos.",
+  hex: "Maldicao que aumenta seu dano contra o alvo.",
+  witchBolt: "Raio eletrico sustentado em um alvo.",
+  faerieFire: "Luz feerica que revela alvos e concede vantagem.",
+  entangle: "Vinhas prendem criaturas em uma area.",
+  thunderousSmite: "Golpe energizado com trovão para paladinos.",
+};
+
+export const SPELL_LEVELS: Record<SpellId, 1> = {
+  magicMissile: 1,
+  burningHands: 1,
+  shield: 1,
+  healingWord: 1,
+  cureWounds: 1,
+  guidingBolt: 1,
+  charmPerson: 1,
+  dissonantWhispers: 1,
+  thunderwave: 1,
+  hex: 1,
+  witchBolt: 1,
+  faerieFire: 1,
+  entangle: 1,
+  thunderousSmite: 1,
+};
+
+export const CLASS_SPELLCASTING: Partial<
+  Record<
+    ClassId,
+    {
+      slotLevel1: number;
+      slotLevel2: number;
+      maxKnownSpells: number;
+      spellOptions: SpellId[];
+    }
+  >
+> = {
+  wizard: {
+    slotLevel1: 2,
+    slotLevel2: 0,
+    maxKnownSpells: 3,
+    spellOptions: ["magicMissile", "burningHands", "shield", "charmPerson", "thunderwave"],
+  },
+  sorcerer: {
+    slotLevel1: 2,
+    slotLevel2: 0,
+    maxKnownSpells: 2,
+    spellOptions: ["magicMissile", "burningHands", "shield", "witchBolt", "charmPerson"],
+  },
+  warlock: {
+    slotLevel1: 1,
+    slotLevel2: 0,
+    maxKnownSpells: 2,
+    spellOptions: ["hex", "charmPerson", "witchBolt", "burningHands"],
+  },
+  cleric: {
+    slotLevel1: 2,
+    slotLevel2: 0,
+    maxKnownSpells: 3,
+    spellOptions: ["healingWord", "cureWounds", "guidingBolt", "shield"],
+  },
+  druid: {
+    slotLevel1: 2,
+    slotLevel2: 0,
+    maxKnownSpells: 3,
+    spellOptions: ["cureWounds", "faerieFire", "entangle", "thunderwave"],
+  },
+  bard: {
+    slotLevel1: 2,
+    slotLevel2: 0,
+    maxKnownSpells: 2,
+    spellOptions: ["charmPerson", "dissonantWhispers", "healingWord", "thunderwave"],
+  },
+  paladin: {
+    slotLevel1: 0,
+    slotLevel2: 0,
+    maxKnownSpells: 0,
+    spellOptions: ["thunderousSmite"],
+  },
+};
+
 const ALL_SKILLS: SkillKey[] = [
   "acrobatics",
   "animalHandling",

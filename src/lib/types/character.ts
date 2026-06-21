@@ -42,6 +42,9 @@ export type CharacterDraft = {
   skillProficiencies: SkillKey[];
 
   equipmentIds: string[];
+  knownSpellIds: string[];
+  spellSlotsLevel1: number;
+  spellSlotsLevel2: number;
 };
 
 export type Character = CharacterDraft & {
@@ -76,5 +79,8 @@ export function createEmptyDraft(id: string): CharacterDraft {
     abilities: { ...DEFAULT_ABILITIES },
     skillProficiencies: [],
     equipmentIds: [],
+    knownSpellIds: [],
+    spellSlotsLevel1: 0,
+    spellSlotsLevel2: 0,
   };
 }

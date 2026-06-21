@@ -39,7 +39,7 @@ export function HomePage() {
           D&amp;D 5e · SRD
         </p>
         <h1 className="mt-2 text-3xl font-semibold text-zinc-900">
-          Character Builder
+          🧌 Trollsheet
         </h1>
         <p className="mt-2 text-zinc-600">
           Crie personagens nível 1 em passos, no estilo app mobile.

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   CLASS_LABELS,
@@ -17,10 +17,11 @@ import {
 import type { Character } from "@/lib/types/character";
 
 export function HomePage() {
-  const [characters, setCharacters] = useState<Character[]>(() => {
-    if (typeof window === "undefined") return [];
-    return listCharacters();
-  });
+  const [characters, setCharacters] = useState<Character[]>([]);
+
+  useEffect(() => {
+    setCharacters(listCharacters());
+  }, []);
 
   function handleNewCharacter() {
     startNewDraft();
